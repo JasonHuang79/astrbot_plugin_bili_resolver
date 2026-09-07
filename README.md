@@ -56,7 +56,7 @@ https://www.bilibili.com/video/av114556558967080?p=1
   - `simple` 简约风格
 - **前置条件**：需要在 AstrBot 侧配置可用的 html_render / t2i 服务（公共接口或[自部署镜像](https://docs.astrbot.app/others/self-host-t2i.html)）。
 - 未配置渲染服务、渲染失败或内容不可渲染时，自动回退为文字 + 封面图节点，不影响使用。
-- 注意：合并转发节点内的图片依赖 OneBot 客户端（如 NapCat）对本地图片路径的支持；若客户端不支持会整条退回普通回复。
+- 合并转发节点内的渲染图以 **base64 内联**（`base64://...`）发送，因此即使 astrbot 与 OneBot 客户端（如 NapCat）不在同一台主机也能正常显示；内联上限约 1.5MB，超出自动回退文本节点。
 
 ## 支持的链接格式
 

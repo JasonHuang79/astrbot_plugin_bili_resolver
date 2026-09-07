@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import urllib.parse
@@ -282,7 +283,7 @@ def _format_msg(msg_list: List[Union[List[str], str]]) -> list:
     "bilibili小组件等转链的工具,方便PC查看链接,"
     "因为之前用其他的转链总是被踢下线,所以自己写了个简单版的,"
     "从发布以来还没被踢下线",
-    "1.0.5",
+    "1.0.6",
     "https://github.com/chufeng/astrbot_plugin_bili_resolver",
 )
 class BilibiliAnalysis(Star):
@@ -586,17 +587,48 @@ class BilibiliAnalysis(Star):
                 logger.error(f"卡片渲染异常: {e!r}", exc_info=True)
                 img_path, payload = None, None
             if img_path:
-                segments = [
-                    {"type": "image", "data": {"file": img_path}}
-                ]
-                url = (payload or {}).get("url")
-                if url:
-                    segments.append(
-                        {"type": "text", "data": {"text": url}}
-                    )
-                return segments
+                file_field = self._inline_image_field(img_path)
+                if not file_field:
+                    logger.warning("渲染图无法内联到合并转发，回退文本节点")
+                else:
+                    segments = [
+                        {"type": "image", "data": {"file": file_field}}
+                    ]
+                    url = (payload or {}).get("url")
+                    if url:
+                        segments.append(
+                            {"type": "text", "data": {"text": url}}
+                        )
+                    return segments
             logger.warning("卡片渲染不可用，回退文本节点")
         return _segments_from_parsed(msg)
+
+    @staticmethod
+    def _inline_image_field(
+        img_path: str, max_inline_bytes: int = 1_500_000
+    ) -> str:
+        """把渲染图转成合并转发 node 可用的 ``image.file`` 字段。
+
+        OneBot 客户端（NapCat 等）可能与 astrbot 不在同一台主机上，
+        直接给本地文件路径会因读不到而整条失败（EACCES/ENOENT）。
+        因此把图片 base64 内联（``base64://...``），客户端可独立解码。
+        文件过大或读取失败时返回空串，调用方应回退文本节点。
+        """
+        try:
+            size = os.path.getsize(img_path)
+            if size <= 0 or size > max_inline_bytes:
+                logger.warning(
+                    f"渲染图大小 {size}B 超出内联上限 {max_inline_bytes}B"
+                )
+                return ""
+            import base64
+
+            with open(img_path, "rb") as f:
+                raw = f.read()
+            return "base64://" + base64.b64encode(raw).decode("ascii")
+        except OSError as e:
+            logger.warning(f"读取渲染图失败 {img_path}: {e}")
+            return ""
 
     async def _send_forward(
         self, event: AstrMessageEvent, group_id, nodes: list
