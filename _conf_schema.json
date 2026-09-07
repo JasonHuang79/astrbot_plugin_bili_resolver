@@ -14,6 +14,23 @@
     "type": "bool",
     "default": true
   },
+  "enable_forward": {
+    "description": "解析结果以 QQ 合并转发卡片发送（客户端不支持时自动退回普通回复）",
+    "type": "bool",
+    "default": true
+  },
+  "enable_render": {
+    "description": "将解析结果渲染成 HTML 卡片图片作为合并转发节点内容（需 AstrBot 配置 html_render/t2i 服务；渲染失败自动回退文本）",
+    "type": "bool",
+    "default": true
+  },
+  "renderer_template": {
+    "description": "渲染卡片样式",
+    "type": "string",
+    "options": ["template_1", "template_2", "simple"],
+    "default": "template_2",
+    "hint": "template_1：经典风格\ntemplate_2：B站粉风格（默认）\nsimple：简约风格\n运行期可用 /卡片样式 指令切换"
+  },
   "group_whitelist_mode": {
     "description": "群组白名单模式（开启后仅列表中的群生效，关闭则为黑名单模式——列表中的群不生效）",
     "type": "bool",

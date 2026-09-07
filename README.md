@@ -36,6 +36,28 @@ https://www.bilibili.com/video/av114556558967080?p=1
 
 同时附带视频封面图。
 
+## 合并转发
+
+默认情况下，解析回复会以 **QQ 合并转发卡片** 发送（配置项 `enable_forward`，默认开启）：
+
+- 自动解析 B 站链接时：卡片包含「你发送的原文 + 解析结果」两个节点，像一条折叠的聊天记录；
+- 使用 `/搜视频` 时：卡片包含解析结果节点；
+- 结果节点默认是一张 **HTML 渲染的卡片图片**（见下方「卡片渲染」），附带可点击的原链接；渲染不可用/被关闭时退回文字摘要 + 封面图节点。
+
+若当前 OneBot 客户端不支持合并转发（如缺少 `send_group_forward_msg`），插件会自动退回普通文本/图片回复，不影响使用。关闭 `enable_forward` 后完全恢复为普通直接回复。
+
+## 卡片渲染
+
+当 `enable_forward` 与 `enable_render`（均默认开启）开启时，解析结果会通过 AstrBot 的 `html_render`（t2i 渲染）服务渲染成一张精美的 HTML 卡片图，再作为合并转发的结果节点发送。
+
+- 内置三套模板，可用 `/卡片样式` 指令随时查看/切换（也可用配置项 `renderer_template` 设置）：
+  - `template_1` 经典风格
+  - `template_2` B站粉风格（默认）
+  - `simple` 简约风格
+- **前置条件**：需要在 AstrBot 侧配置可用的 html_render / t2i 服务（公共接口或[自部署镜像](https://docs.astrbot.app/others/self-host-t2i.html)）。
+- 未配置渲染服务、渲染失败或内容不可渲染时，自动回退为文字 + 封面图节点，不影响使用。
+- 注意：合并转发节点内的图片依赖 OneBot 客户端（如 NapCat）对本地图片路径的支持；若客户端不支持会整条退回普通回复。
+
 ## 支持的链接格式
 
 | 类型 | 示例 |
@@ -52,6 +74,8 @@ https://www.bilibili.com/video/av114556558967080?p=1
 | 指令 | 说明 |
 |------|------|
 | `/搜视频 关键词` | 搜索 B 站视频，返回第一个结果的解析信息 |
+| `/卡片样式` | 查看当前渲染卡片样式与可用样式 |
+| `/卡片样式 <样式>` | 切换卡片样式，如 `/卡片样式 simple` 或 `/卡片样式 简约风格` |
 
 ## 安装
 
@@ -68,6 +92,9 @@ https://www.bilibili.com/video/av114556558967080?p=1
 | `enable_auto_parse` | bool | `true` | 自动解析开关 |
 | `enable_search` | bool | `true` | `/搜视频` 指令开关 |
 | `enable_image` | bool | `true` | 回复中是否显示封面图 |
+| `enable_forward` | bool | `true` | 解析结果以 QQ 合并转发卡片发送（客户端不支持时自动退回普通回复） |
+| `enable_render` | bool | `true` | 解析结果渲染成 HTML 卡片图片作为合并转发节点（需配合 AstrBot t2i/html_render 服务） |
+| `renderer_template` | string | `template_2` | 渲染卡片样式：`template_1` 经典 / `template_2` B站粉 / `simple` 简约，可用 `/卡片样式` 指令切换 |
 | `group_whitelist_mode` | bool | `false` | 白名单模式（开启=仅列表中的群生效，关闭=黑名单模式） |
 | `group_list` | list | `[]` | 群组 ID 列表 |
 | `template_preset` | string | `简洁风格` | 视频解析排版风格，见下方说明 |
